@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package rpcMsg;
+
+option go_package = "pkg/protocol/rpcMsg";
+
+service ControlMsg {
+    rpc SendHelloMsg (HelloMsg) returns (WelcomeMsg) {};
+}
+
+message HelloMsg {
+    uint32 msgType = 1;
+    uint32 udpPort = 2;
+    string adderss = 3;
+}
+
+message WelcomeMsg {
+    uint32 msgType = 1;
+    uint32 songNum = 2;
+}

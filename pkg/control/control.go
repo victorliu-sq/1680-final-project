@@ -42,7 +42,6 @@ func (cc *ClientControl) Make(args []string) {
 	// test for sending an msg of unknown type
 	// SendUnknownMsg(conn, portNum)
 	go cc.ScanClientCLI()
-	fmt.Println("hello")
 	cc.HandleClientMsg()
 }
 
