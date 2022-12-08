@@ -64,7 +64,7 @@ func (server *Server) Make(args []string) {
 	go server.ScanServerCLI()
 
 	// broadcast udp data
-	// go server.InitialDaemonStations()
+	go server.InitialDaemonStations()
 
 	// log.Println("Server is running successfully!")
 	go server.HandleServerCLI()

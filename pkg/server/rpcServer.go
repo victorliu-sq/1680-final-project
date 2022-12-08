@@ -47,7 +47,6 @@ func (rpcServer *RPCServer) HandleHelloMsg(ctx context.Context, request *rpcMsg.
 	server.Listener2Conn[listenerAddr] = udpConn
 	// update UDP metadata
 	server.FirstHello[controlAddr] = 1
-	fmt.Println(server.FirstHello)
 	server.Control2Listener[controlAddr] = listenerAddr
 	// return back responses
 	return &rpcMsg.ResponseWelcome{
