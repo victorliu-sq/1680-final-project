@@ -7,7 +7,7 @@ import (
 	"snowcast/pkg/protocol"
 )
 
-func (server *Server) HandleServerMsg() {
+func (server *Server) HandleServerCLI() {
 	for {
 		serverMsg := <-server.ServerMsgChan
 		switch serverMsg.CLIType {
@@ -23,10 +23,12 @@ func (server *Server) HandleServerMsg() {
 	}
 }
 
-// Handlers
+// Server CLI Handlers
 // **************************************************************************
 
 func (server *Server) HandleCLIPrintClients() {
+	server.Mu.Lock()
+	defer server.Mu.Unlock()
 	for idx, filename := range server.Filenames {
 		output := fmt.Sprintf("%v,%v", idx, filename)
 		for controlAddr, _ := range server.StationIdx2Controls[uint16(idx)] {
@@ -38,6 +40,8 @@ func (server *Server) HandleCLIPrintClients() {
 }
 
 func (server *Server) HandleCLIPrintToFile(serverCLI protocol.ServerMsg) {
+	server.Mu.Lock()
+	defer server.Mu.Unlock()
 	// create a file
 	filename := serverCLI.Filename
 	// filePath := fmt.Sprintf("./%v", filename)
@@ -76,6 +80,8 @@ func (server *Server) HandleCLIQuitServer() {
 */
 
 func (server *Server) HandleCLIRemoveStationIdx(serverCLI protocol.ServerMsg) {
+	server.Mu.Lock()
+	defer server.Mu.Unlock()
 	stationIdxToDel := serverCLI.StationNum
 
 	// ********* Uncomment *****************

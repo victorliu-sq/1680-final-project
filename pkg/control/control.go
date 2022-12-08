@@ -2,9 +2,12 @@ package control
 
 import (
 	"fmt"
-	"net"
+	"log"
 	"snowcast/pkg/protocol"
+	"snowcast/pkg/protocol/rpcMsg"
 	"sync"
+
+	"google.golang.org/grpc"
 )
 
 type ClientControl struct {
@@ -13,7 +16,8 @@ type ClientControl struct {
 	ServerIP      string
 	ServerPort    string
 	ClientMsgChan chan protocol.ClientMsg
-	ServerConn    *net.TCPConn
+	// ServerConn    *net.TCPConn
+	ClientRPCClient rpcMsg.ControlMsgServiceClient
 	// Check whether the server sends a Welcome before client sends a Hello
 	IsHelloSent bool
 	// Check whether server has received one Welcome Msg
@@ -23,6 +27,7 @@ type ClientControl struct {
 }
 
 func (cc *ClientControl) Make(args []string) {
+	cc.Mu = sync.Mutex{}
 	cc.ServerIP, cc.ServerPort, cc.UDPPort = args[1], args[2], args[3]
 	cc.ClientMsgChan = make(chan protocol.ClientMsg, 1)
 	// Dial to server
@@ -30,14 +35,22 @@ func (cc *ClientControl) Make(args []string) {
 	// if err != nil {
 	// 	log.Fatalln(err)
 	// }
-	// 2. Connect to server and get socket
-	// cc.ServerConn, err = net.DialTCP("tcp4", nil, addr)
+	// // 2. Connect to server and get socket
+	// conn, err = net.DialTCP("tcp4", nil, addr)
 	// if err != nil {
 	// 	log.Fatalln(err)
 	// }
+	conn, err := grpc.Dial(ToColonPortNumber(cc.ServerPort), grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Fail to connect: %v \n", err)
+	}
+	defer conn.Close()
+
+	// client RPC client
+	cc.ClientRPCClient = rpcMsg.NewControlMsgServiceClient(conn)
 
 	// test for multiple hello msgs for an invalid reply
-	// SendHelloMsg(conn, portNum)
+	go cc.CallHelloRPC()
 
 	// test for sending an msg of unknown type
 	// SendUnknownMsg(conn, portNum)

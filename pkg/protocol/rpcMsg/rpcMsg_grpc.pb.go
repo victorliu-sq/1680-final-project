@@ -18,86 +18,86 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// ControlMsgClient is the client API for ControlMsg service.
+// ControlMsgServiceClient is the client API for ControlMsgService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type ControlMsgClient interface {
-	SendHelloMsg(ctx context.Context, in *HelloMsg, opts ...grpc.CallOption) (*WelcomeMsg, error)
+type ControlMsgServiceClient interface {
+	HandleHelloMsg(ctx context.Context, in *RequestHello, opts ...grpc.CallOption) (*ResponseWelcome, error)
 }
 
-type controlMsgClient struct {
+type controlMsgServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewControlMsgClient(cc grpc.ClientConnInterface) ControlMsgClient {
-	return &controlMsgClient{cc}
+func NewControlMsgServiceClient(cc grpc.ClientConnInterface) ControlMsgServiceClient {
+	return &controlMsgServiceClient{cc}
 }
 
-func (c *controlMsgClient) SendHelloMsg(ctx context.Context, in *HelloMsg, opts ...grpc.CallOption) (*WelcomeMsg, error) {
-	out := new(WelcomeMsg)
-	err := c.cc.Invoke(ctx, "/rpcMsg.ControlMsg/SendHelloMsg", in, out, opts...)
+func (c *controlMsgServiceClient) HandleHelloMsg(ctx context.Context, in *RequestHello, opts ...grpc.CallOption) (*ResponseWelcome, error) {
+	out := new(ResponseWelcome)
+	err := c.cc.Invoke(ctx, "/rpcMsg.ControlMsgService/HandleHelloMsg", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// ControlMsgServer is the server API for ControlMsg service.
-// All implementations must embed UnimplementedControlMsgServer
+// ControlMsgServiceServer is the server API for ControlMsgService service.
+// All implementations must embed UnimplementedControlMsgServiceServer
 // for forward compatibility
-type ControlMsgServer interface {
-	SendHelloMsg(context.Context, *HelloMsg) (*WelcomeMsg, error)
-	mustEmbedUnimplementedControlMsgServer()
+type ControlMsgServiceServer interface {
+	HandleHelloMsg(context.Context, *RequestHello) (*ResponseWelcome, error)
+	mustEmbedUnimplementedControlMsgServiceServer()
 }
 
-// UnimplementedControlMsgServer must be embedded to have forward compatible implementations.
-type UnimplementedControlMsgServer struct {
+// UnimplementedControlMsgServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedControlMsgServiceServer struct {
 }
 
-func (UnimplementedControlMsgServer) SendHelloMsg(context.Context, *HelloMsg) (*WelcomeMsg, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendHelloMsg not implemented")
+func (UnimplementedControlMsgServiceServer) HandleHelloMsg(context.Context, *RequestHello) (*ResponseWelcome, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandleHelloMsg not implemented")
 }
-func (UnimplementedControlMsgServer) mustEmbedUnimplementedControlMsgServer() {}
+func (UnimplementedControlMsgServiceServer) mustEmbedUnimplementedControlMsgServiceServer() {}
 
-// UnsafeControlMsgServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ControlMsgServer will
+// UnsafeControlMsgServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ControlMsgServiceServer will
 // result in compilation errors.
-type UnsafeControlMsgServer interface {
-	mustEmbedUnimplementedControlMsgServer()
+type UnsafeControlMsgServiceServer interface {
+	mustEmbedUnimplementedControlMsgServiceServer()
 }
 
-func RegisterControlMsgServer(s grpc.ServiceRegistrar, srv ControlMsgServer) {
-	s.RegisterService(&ControlMsg_ServiceDesc, srv)
+func RegisterControlMsgServiceServer(s grpc.ServiceRegistrar, srv ControlMsgServiceServer) {
+	s.RegisterService(&ControlMsgService_ServiceDesc, srv)
 }
 
-func _ControlMsg_SendHelloMsg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HelloMsg)
+func _ControlMsgService_HandleHelloMsg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestHello)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ControlMsgServer).SendHelloMsg(ctx, in)
+		return srv.(ControlMsgServiceServer).HandleHelloMsg(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/rpcMsg.ControlMsg/SendHelloMsg",
+		FullMethod: "/rpcMsg.ControlMsgService/HandleHelloMsg",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ControlMsgServer).SendHelloMsg(ctx, req.(*HelloMsg))
+		return srv.(ControlMsgServiceServer).HandleHelloMsg(ctx, req.(*RequestHello))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// ControlMsg_ServiceDesc is the grpc.ServiceDesc for ControlMsg service.
+// ControlMsgService_ServiceDesc is the grpc.ServiceDesc for ControlMsgService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var ControlMsg_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "rpcMsg.ControlMsg",
-	HandlerType: (*ControlMsgServer)(nil),
+var ControlMsgService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "rpcMsg.ControlMsgService",
+	HandlerType: (*ControlMsgServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "SendHelloMsg",
-			Handler:    _ControlMsg_SendHelloMsg_Handler,
+			MethodName: "HandleHelloMsg",
+			Handler:    _ControlMsgService_HandleHelloMsg_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

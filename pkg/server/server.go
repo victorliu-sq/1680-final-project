@@ -2,14 +2,21 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"snowcast/pkg/protocol"
+	"snowcast/pkg/protocol/rpcMsg"
+	"sync"
+
+	"google.golang.org/grpc"
 )
 
 type Server struct {
 	MaxPacketSize int
+	// Sync
+	Mu sync.Mutex
 	// client
-	// Listener *net.TCPListener
+	Listener *net.TCPListener
 	// file
 	Filenames []string
 	// Filename2Chunks     map[string][][]byte
@@ -30,6 +37,7 @@ type Server struct {
 }
 
 func (server *Server) Make(args []string) {
+	server.Mu = sync.Mutex{}
 	server.MaxPacketSize = 4096
 	server.Filenames = []string{}
 	server.StationIdx2Filename = map[uint16]string{}
@@ -50,25 +58,8 @@ func (server *Server) Make(args []string) {
 		server.Filenames = append(server.Filenames, filename)
 		server.StationIdx2Filename[idx] = args[i]
 		server.StationIdx2Controls[idx] = map[string]int{}
-		// file to chunks
-		// We do not need to get chunks of files at first --> time consuming
-		// chunks := server.ToChunks(filename)
-		// server.Filename2Chunks[filename] = chunks
 	}
 
-	/* // Open an listener
-	listenPort := args[1]
-	// 1. specify a server port Number to get an TCP addr
-	addr, err := net.ResolveTCPAddr("tcp4", ToColonPortNumber(listenPort))
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// 2. create a listener listening on that TCP addr
-	server.Listener, err = net.ListenTCP("tcp4", addr)
-	if err != nil {
-		log.Fatalln(err)
-	} */
 	// Handle server CLI Msg
 	go server.ScanServerCLI()
 
@@ -78,12 +69,33 @@ func (server *Server) Make(args []string) {
 	// log.Println("Server is running successfully!")
 	// Handle hello msg
 	// go server.RevClientConn()
+	go server.HandleServerCLI()
 
-	server.HandleServerMsg()
+	// Open an listener for RPC Msg
+	listenPort := args[1]
+	// 1. specify a server port Number to get a listener
+	listener, err := net.Listen("tcp", GetListenerAddress(listenPort))
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	rpcServer := RPCServer{}
+	rpcServer.Make(server)
+
+	// 2. open a gRPC server
+	grpcServer := grpc.NewServer()
+
+	rpcMsg.RegisterControlMsgServiceServer(grpcServer, &rpcServer)
+
+	err = grpcServer.Serve(listener)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 }
 
 // ************************************************************
 // Port Conversion
-func ToColonPortNumber(portNum string) string {
-	return fmt.Sprintf(":%v", portNum)
+func GetListenerAddress(portNum string) string {
+	return fmt.Sprintf("localhost:%v", portNum)
 }

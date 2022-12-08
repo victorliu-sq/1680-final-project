@@ -4,17 +4,22 @@ package rpcMsg;
 
 option go_package = "pkg/protocol/rpcMsg";
 
-service ControlMsg {
-    rpc SendHelloMsg (HelloMsg) returns (WelcomeMsg) {};
+enum RPCType {
+    REQUEST_HELLO = 0;
+    RESPONSE_WELCOME = 1;
 }
 
-message HelloMsg {
+service ControlMsgService {
+    rpc HandleHelloMsg (RequestHello) returns (ResponseWelcome) {};
+}
+
+message RequestHello {
     uint32 msgType = 1;
     uint32 udpPort = 2;
-    string adderss = 3;
+    string address = 3;
 }
 
-message WelcomeMsg {
+message ResponseWelcome {
     uint32 msgType = 1;
     uint32 songNum = 2;
 }
