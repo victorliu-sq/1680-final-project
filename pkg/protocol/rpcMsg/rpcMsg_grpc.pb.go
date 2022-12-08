@@ -139,3 +139,125 @@ var ControlMsgService_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "rpcMsg.proto",
 }
+
+// ServerMsgServiceClient is the client API for ServerMsgService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type ServerMsgServiceClient interface {
+	HandleSendFileMsg(ctx context.Context, in *RequestSendFile, opts ...grpc.CallOption) (*ResponseSendFile, error)
+	HandleShutdownMsg(ctx context.Context, in *RequestShutdown, opts ...grpc.CallOption) (*ResponseShutdown, error)
+}
+
+type serverMsgServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewServerMsgServiceClient(cc grpc.ClientConnInterface) ServerMsgServiceClient {
+	return &serverMsgServiceClient{cc}
+}
+
+func (c *serverMsgServiceClient) HandleSendFileMsg(ctx context.Context, in *RequestSendFile, opts ...grpc.CallOption) (*ResponseSendFile, error) {
+	out := new(ResponseSendFile)
+	err := c.cc.Invoke(ctx, "/rpcMsg.ServerMsgService/HandleSendFileMsg", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serverMsgServiceClient) HandleShutdownMsg(ctx context.Context, in *RequestShutdown, opts ...grpc.CallOption) (*ResponseShutdown, error) {
+	out := new(ResponseShutdown)
+	err := c.cc.Invoke(ctx, "/rpcMsg.ServerMsgService/HandleShutdownMsg", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ServerMsgServiceServer is the server API for ServerMsgService service.
+// All implementations must embed UnimplementedServerMsgServiceServer
+// for forward compatibility
+type ServerMsgServiceServer interface {
+	HandleSendFileMsg(context.Context, *RequestSendFile) (*ResponseSendFile, error)
+	HandleShutdownMsg(context.Context, *RequestShutdown) (*ResponseShutdown, error)
+	mustEmbedUnimplementedServerMsgServiceServer()
+}
+
+// UnimplementedServerMsgServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedServerMsgServiceServer struct {
+}
+
+func (UnimplementedServerMsgServiceServer) HandleSendFileMsg(context.Context, *RequestSendFile) (*ResponseSendFile, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandleSendFileMsg not implemented")
+}
+func (UnimplementedServerMsgServiceServer) HandleShutdownMsg(context.Context, *RequestShutdown) (*ResponseShutdown, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandleShutdownMsg not implemented")
+}
+func (UnimplementedServerMsgServiceServer) mustEmbedUnimplementedServerMsgServiceServer() {}
+
+// UnsafeServerMsgServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ServerMsgServiceServer will
+// result in compilation errors.
+type UnsafeServerMsgServiceServer interface {
+	mustEmbedUnimplementedServerMsgServiceServer()
+}
+
+func RegisterServerMsgServiceServer(s grpc.ServiceRegistrar, srv ServerMsgServiceServer) {
+	s.RegisterService(&ServerMsgService_ServiceDesc, srv)
+}
+
+func _ServerMsgService_HandleSendFileMsg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestSendFile)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServerMsgServiceServer).HandleSendFileMsg(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpcMsg.ServerMsgService/HandleSendFileMsg",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServerMsgServiceServer).HandleSendFileMsg(ctx, req.(*RequestSendFile))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ServerMsgService_HandleShutdownMsg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestShutdown)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServerMsgServiceServer).HandleShutdownMsg(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpcMsg.ServerMsgService/HandleShutdownMsg",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServerMsgServiceServer).HandleShutdownMsg(ctx, req.(*RequestShutdown))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// ServerMsgService_ServiceDesc is the grpc.ServiceDesc for ServerMsgService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var ServerMsgService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "rpcMsg.ServerMsgService",
+	HandlerType: (*ServerMsgServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "HandleSendFileMsg",
+			Handler:    _ServerMsgService_HandleSendFileMsg_Handler,
+		},
+		{
+			MethodName: "HandleShutdownMsg",
+			Handler:    _ServerMsgService_HandleShutdownMsg_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "rpcMsg.proto",
+}

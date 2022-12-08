@@ -2,13 +2,10 @@ package server
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"snowcast/pkg/protocol"
 	"snowcast/pkg/protocol/rpcMsg"
 	"sync"
-
-	"google.golang.org/grpc"
 )
 
 type Server struct {
@@ -27,6 +24,7 @@ type Server struct {
 	FirstHello      map[string]int
 	FirstSetStation map[string]int
 	// Controls            map[string]int
+	Control2SRPCClient  map[string]rpcMsg.ServerMsgServiceClient
 	Control2Conn        map[string]net.Conn
 	Control2StationIdx  map[string]uint16
 	Control2Listener    map[string]string
@@ -47,6 +45,7 @@ func (server *Server) Make(args []string) {
 	server.ServerMsgChan = make(chan protocol.ServerMsg, 1)
 	server.Control2Listener = map[string]string{}
 	server.Listener2Conn = map[string]*net.UDPConn{}
+	server.Control2SRPCClient = map[string]rpcMsg.ServerMsgServiceClient{}
 	// server.Filename2Chunks = map[string][][]byte{}
 	server.Control2Conn = map[string]net.Conn{}
 	server.FirstHello = map[string]int{}
@@ -71,25 +70,7 @@ func (server *Server) Make(args []string) {
 
 	// Open an listener for RPC Msg
 	listenPort := args[1]
-	// 1. specify a server port Number to get a listener
-	listener, err := net.Listen("tcp", GetListenerAddress(listenPort))
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	rpcServer := RPCServer{}
-	rpcServer.Make(server)
-
-	// 2. open a gRPC server
-	grpcServer := grpc.NewServer()
-
-	rpcMsg.RegisterControlMsgServiceServer(grpcServer, &rpcServer)
-
-	err = grpcServer.Serve(listener)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
+	server.OpenCRPCServer(listenPort)
 }
 
 // ************************************************************

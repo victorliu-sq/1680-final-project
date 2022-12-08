@@ -15,7 +15,7 @@ generate:
     $(PROTO_DIR)rpcMsg.proto
 
 runC1:
-	./snowcast_control localhost 8888 5000 control1
+	./snowcast_control localhost 8888 5000 control1 23333
 
 runL:
 	./snowcast_listener 5000 | pv > /dev/null

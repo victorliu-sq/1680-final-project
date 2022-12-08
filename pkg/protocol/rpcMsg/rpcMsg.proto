@@ -8,10 +8,14 @@ enum RPCType {
     // Request
     REQUEST_HELLO = 0;
     REQUEST_SETSTATION = 1;
+    REQUEST_SENDFILE = 2;
+    REQUEST_SHUTDOWN = 3;
     // Response
-    RESPONSE_WELCOME = 2;
-    RESPONSE_ANNOUNCE = 3;
-    RESPOSNE_INVALID = 4;
+    RESPONSE_WELCOME = 4;
+    RESPONSE_ANNOUNCE = 5;
+    RESPOSNE_INVALID = 6;
+    RESPONSE_SENFILE = 7;
+    RESPONSE_SHUTDOWN = 8;
 }
 
 service ControlMsgService {
@@ -19,16 +23,24 @@ service ControlMsgService {
     rpc HandleSetStationMsg (RequestSetStation) returns (ResponseAnnounce) {}; 
 }
 
+service ServerMsgService {
+    rpc HandleSendFileMsg (RequestSendFile) returns (ResponseSendFile) {};
+    rpc HandleShutdownMsg (RequestShutdown) returns (ResponseShutdown) {};
+}
+
 message RequestHello {
     uint32 msgType = 1;
     string udpPort = 2;
     string controlName = 3;
+    string srpcServerPort = 4;
 }
 
 message ResponseWelcome {
     uint32 msgType = 1;
     uint32 songNum = 2;
 }
+
+// =====================================================================
 
 message RequestSetStation {
     uint32 msgType = 1;
@@ -39,4 +51,24 @@ message RequestSetStation {
 message ResponseAnnounce {
     uint32 msgType = 1;
     string songName = 2;
+}
+
+// =====================================================================
+
+message RequestSendFile {
+    uint32 msgType = 1;
+    string songName = 2;
+}
+
+message ResponseSendFile {
+}
+
+// =====================================================================
+
+message RequestShutdown {
+    uint32 msgType = 1;
+    uint32 stationNum = 2;
+}
+
+message ResponseShutdown {
 }

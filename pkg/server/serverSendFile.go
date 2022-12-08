@@ -2,11 +2,13 @@ package server
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
+	"snowcast/pkg/protocol/rpcMsg"
 	"time"
 )
 
@@ -29,7 +31,7 @@ func (server *Server) DaemonStation(stationIdx int, filename string) {
 		log.Fatalln(err)
 	}
 	// Start to send Announce Msg to controller
-	// server.BroadcastToControllers(stationIdx)
+	server.BroadcastToControllers(stationIdx)
 	// Get a reader
 	r := bufio.NewReader(f)
 	// while this stationIdx exists in server, the daemon should broadcast to listeners
@@ -46,7 +48,7 @@ func (server *Server) DaemonStation(stationIdx int, filename string) {
 				}
 				// Start again from file start, we need to send announceMsg to all clients
 				// fmt.Printf("Broadcast stationIdx %v Announcement to controllers\n", stationIdx)
-				// server.BroadcastToControllers(stationIdx)
+				server.BroadcastToControllers(stationIdx)
 				continue
 			}
 			log.Fatalln(err)
@@ -58,8 +60,6 @@ func (server *Server) DaemonStation(stationIdx int, filename string) {
 		// = 2 ^ 14 B/s
 		// if one chunk has 4096 (2 ^ 12) bytes
 		// = 2 ^ 2 chunk/s
-
-		// time.Sleep(1 * time.Second)
 		time.Sleep(250 * time.Millisecond)
 	}
 	fmt.Printf("Close the a Daemon for station %v to send chunks\n", stationIdx)
@@ -86,19 +86,26 @@ func (server *Server) SendToListner(conn *net.UDPConn, chunk []byte) {
 }
 
 // Broadcast to controllers
-// func (server *Server) BroadcastToControllers(stationIdx int) {
-// 	server.Mu.Lock()
-// 	defer server.Mu.Unlock()
-// 	filename := server.Filenames[stationIdx]
-// 	controlAddrs := server.StationIdx2Controls[uint16(stationIdx)]
-// 	for controlAddr, _ := range controlAddrs {
-// 		// fmt.Println(controlAddr)
-// 		go server.SendAnnounceMsgX(controlAddr, filename)
-// 		// listenerAddr := server.Control2Listener[controlAddr]
-// 		// conn := server.Listener2Conn[listenerAddr]
-// 		// go server.SendToListner(conn, chunk)
-// 	}
-// }
+func (server *Server) BroadcastToControllers(stationIdx int) {
+	server.Mu.Lock()
+	defer server.Mu.Unlock()
+	filename := server.Filenames[stationIdx]
+	controlAddrs := server.StationIdx2Controls[uint16(stationIdx)]
+	for controlAddr, _ := range controlAddrs {
+		// fmt.Println(controlAddr)
+		srpcClient := server.Control2SRPCClient[controlAddr]
+		request := &rpcMsg.RequestSendFile{
+			MsgType:  uint32(rpcMsg.RPCType_REQUEST_SENDFILE),
+			SongName: filename,
+		}
+		srpcClient.HandleSendFileMsg(context.Background(), request)
+		// _, err := srpcClient.
+		// go server.SendAnnounceMsgX(controlAddr, filename)
+		// listenerAddr := server.Control2Listener[controlAddr]
+		// conn := server.Listener2Conn[listenerAddr]
+		// go server.SendToListner(conn, chunk)
+	}
+}
 
 func (server *Server) CheckStationIdxInServerX(stationIdx int) bool {
 	server.Mu.Lock()
