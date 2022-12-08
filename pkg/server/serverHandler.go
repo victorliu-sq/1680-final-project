@@ -1,15 +1,32 @@
-package serverPkg
+package server
 
 import (
 	"fmt"
 	"log"
 	"os"
-	"snowcast/pkg/protocol/CLI"
+	"snowcast/pkg/protocol"
 )
 
+func (server *Server) HandleServerMsg() {
+	for {
+		serverMsg := <-server.ServerMsgChan
+		switch serverMsg.CLIType {
+		case protocol.TypePrintClients:
+			// fmt.Println(server.StationIdx2Controls)
+			server.HandleCLIPrintClients()
+		case protocol.TypeQuitServer:
+			server.HandleCLIQuitServer()
+			// os.Exit(0) still works in goroutine
+		case protocol.TypePrintToFile:
+			server.HandleCLIPrintToFile(serverMsg)
+		}
+	}
+}
+
+// Handlers
+// **************************************************************************
+
 func (server *Server) HandleCLIPrintClients() {
-	server.Mu.Lock()
-	defer server.Mu.Unlock()
 	for idx, filename := range server.Filenames {
 		output := fmt.Sprintf("%v,%v", idx, filename)
 		for controlAddr, _ := range server.StationIdx2Controls[uint16(idx)] {
@@ -20,9 +37,7 @@ func (server *Server) HandleCLIPrintClients() {
 	}
 }
 
-func (server *Server) HandleCLIPrintToFile(serverCLI CLI.ServerCLIMsg) {
-	server.Mu.Lock()
-	defer server.Mu.Unlock()
+func (server *Server) HandleCLIPrintToFile(serverCLI protocol.ServerMsg) {
 	// create a file
 	filename := serverCLI.Filename
 	// filePath := fmt.Sprintf("./%v", filename)
@@ -60,39 +75,13 @@ func (server *Server) HandleCLIQuitServer() {
 	StationIdx2Controls
 */
 
-func (server *Server) HandleCLIAddFile(serverCLI CLI.ServerCLIMsg) {
-	server.Mu.Lock()
-	defer server.Mu.Unlock()
-	filename := serverCLI.Filename
-	stationIdx := uint16(len(server.Filenames))
-	// chunks := server.ToChunks(filename)
-	server.Filenames = append(server.Filenames, filename)
-	// server.Filename2Chunks[filename] = chunks
-	server.StationIdx2Filename[stationIdx] = filename
-	server.StationIdx2Controls[stationIdx] = map[string]int{}
-	// Start a DaemonStation for this stationIdx
-	go server.DaemonStation(int(stationIdx), filename)
-	fmt.Printf("Add one station for file %v successfully\n", serverCLI.Filename)
-	server.BroadcastNewStationMsg(uint16(len(server.Filenames)))
-}
-
-/*
-	To add a file, all variable we need to deal with are:
-	Filenames
-	Filename2Chunks
-	StationIdx2Filename
-	StationIdx2Controls
-*/
-
-func (server *Server) HandleCLIRemoveStationIdx(serverCLI CLI.ServerCLIMsg) {
-	server.Mu.Lock()
-	defer server.Mu.Unlock()
+func (server *Server) HandleCLIRemoveStationIdx(serverCLI protocol.ServerMsg) {
 	stationIdxToDel := serverCLI.StationNum
-	// filenameToDel := server.Filenames[stationIdxToDel]
 
-	server.BroadcasStationShutDownMsg(stationIdxToDel)
+	// ********* Uncomment *****************
+	// server.BroadcasStationShutDownMsg(stationIdxToDel)
+
 	// filename2chunks
-	// delete(server.Filename2Chunks, filenameToDel)
 	// StationIdx2Controls
 	delete(server.StationIdx2Controls, stationIdxToDel)
 	// StationIdx2Filename, remove this will stop the corresponding Daemon to send UDP data

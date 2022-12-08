@@ -1,28 +1,21 @@
-package serverPkg
+package server
 
 import (
-	"bufio"
 	"fmt"
-	"io"
-	"log"
 	"net"
-	"os"
-	"snowcast/pkg/protocol/CLI"
-	"sync"
+	"snowcast/pkg/protocol"
 )
 
 type Server struct {
 	MaxPacketSize int
-	// Sync
-	Mu sync.Mutex
 	// client
-	Listener *net.TCPListener
+	// Listener *net.TCPListener
 	// file
 	Filenames []string
 	// Filename2Chunks     map[string][][]byte
 	StationIdx2Filename map[uint16]string
 	// cli
-	ServerCLIChan chan CLI.ServerCLIMsg
+	ServerMsgChan chan protocol.ServerMsg
 	// control
 	FirstHello      map[string]int
 	FirstSetStation map[string]int
@@ -43,7 +36,7 @@ func (server *Server) Make(args []string) {
 	server.StationIdx2Controls = map[uint16]map[string]int{}
 	// server.Controls = map[string]int{}
 	server.Control2StationIdx = map[string]uint16{}
-	server.ServerCLIChan = make(chan CLI.ServerCLIMsg, 1)
+	server.ServerMsgChan = make(chan protocol.ServerMsg, 1)
 	server.Control2Listener = map[string]string{}
 	server.Listener2Conn = map[string]*net.UDPConn{}
 	// server.Filename2Chunks = map[string][][]byte{}
@@ -63,7 +56,7 @@ func (server *Server) Make(args []string) {
 		// server.Filename2Chunks[filename] = chunks
 	}
 
-	// Open an listener
+	/* // Open an listener
 	listenPort := args[1]
 	// 1. specify a server port Number to get an TCP addr
 	addr, err := net.ResolveTCPAddr("tcp4", ToColonPortNumber(listenPort))
@@ -75,54 +68,18 @@ func (server *Server) Make(args []string) {
 	server.Listener, err = net.ListenTCP("tcp4", addr)
 	if err != nil {
 		log.Fatalln(err)
-	}
+	} */
+	// Handle server CLI Msg
+	go server.ScanServerCLI()
 
 	// broadcast udp data
-	go server.InitialDaemonStations()
+	// go server.InitialDaemonStations()
 
 	// log.Println("Server is running successfully!")
 	// Handle hello msg
-	go server.RevClientConn()
-	// Handle server CLI
-	go server.ScanServerCLI()
-	// go server.ScanServerCLI(server.ServerCLIChan)
-	// Handle Server CLI Msg
-}
+	// go server.RevClientConn()
 
-// **********************************************************
-// Initialization
-
-func (server *Server) ToChunks(filename string) [][]byte {
-	// fileName := "./mp3/Beethoven-SymphonyNo5.mp3"
-	filePath := fmt.Sprintf("./mp3/%v", filename)
-	f, err := os.Open(filePath)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	// fio, err := os.Stat(filePath)
-	// if err != nil {
-	// 	log.Fatalln(err)
-	// }
-	// // fmt.Printf("file size is: %v\n", fio.Size())
-	// chunksNum := (fio.Size() + maxPacketSize - 1) / maxPacketSize
-	// fmt.Printf("chunks num is: %v\n", chunksNum)
-	// read files into chunks
-	chunks := [][]byte{}
-	r := bufio.NewReader(f)
-	for {
-		chunk := make([]byte, server.MaxPacketSize)
-		n, err := r.Read(chunk)
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			log.Fatalln(err)
-		}
-		chunk = chunk[:n]
-		chunks = append(chunks, chunk)
-		// fmt.Println(chunk)
-	}
-	return chunks
+	server.HandleServerMsg()
 }
 
 // ************************************************************
