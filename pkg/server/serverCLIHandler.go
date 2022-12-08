@@ -1,10 +1,12 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"snowcast/pkg/protocol"
+	"snowcast/pkg/protocol/rpcMsg"
 )
 
 func (server *Server) HandleServerCLI() {
@@ -19,6 +21,8 @@ func (server *Server) HandleServerCLI() {
 			// os.Exit(0) still works in goroutine
 		case protocol.TypePrintToFile:
 			server.HandleCLIPrintToFile(serverMsg)
+		case protocol.TypeRemoveStationIdx:
+			server.HandleCLIRemoveStationIdx(serverMsg)
 		}
 	}
 }
@@ -84,8 +88,7 @@ func (server *Server) HandleCLIRemoveStationIdx(serverCLI protocol.ServerMsg) {
 	defer server.Mu.Unlock()
 	stationIdxToDel := serverCLI.StationNum
 
-	// ********* Uncomment *****************
-	// server.BroadcasStationShutDownMsg(stationIdxToDel)
+	server.BroadcasStationShutDownMsg(stationIdxToDel)
 
 	// filename2chunks
 	// StationIdx2Controls
@@ -114,4 +117,17 @@ func (server *Server) HandleCLIRemoveStationIdx(serverCLI protocol.ServerMsg) {
 	}
 	server.Filenames = server.Filenames[:len(server.Filenames)-1]
 	// fmt.Println("filenames after deletion", server.Filenames)
+}
+
+// Broadcast StationShutDown Msg
+func (server *Server) BroadcasStationShutDownMsg(stationIdx uint16) {
+	for controlAddr, _ := range server.StationIdx2Controls[stationIdx] {
+		srpcClient := server.Control2SRPCClient[controlAddr]
+		request := &rpcMsg.RequestShutdown{
+			MsgType:    uint32(rpcMsg.RPCType_REQUEST_SHUTDOWN),
+			StationNum: uint32(stationIdx),
+		}
+		srpcClient.HandleShutdownMsg(context.Background(), request)
+		fmt.Println("Send StationShutDownMsg back")
+	}
 }

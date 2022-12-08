@@ -75,7 +75,7 @@ func (crpcServer *CRPCServer) HandleHelloMsg(ctx context.Context, request *rpcMs
 
 	// create corresponding Server RPC Service Client
 	server.CreateSRPCClient(controlAddr, srpcServerPort)
-	fmt.Println(server.Control2SRPCClient)
+	// fmt.Println(server.Control2SRPCClient)
 	// return back responses
 	return &rpcMsg.ResponseWelcome{
 		MsgType: uint32(rpcMsg.RPCType_RESPONSE_WELCOME),
