@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ControlMsgServiceClient interface {
 	HandleHelloMsg(ctx context.Context, in *RequestHello, opts ...grpc.CallOption) (*ResponseWelcome, error)
+	HandleSetStationMsg(ctx context.Context, in *RequestSetStation, opts ...grpc.CallOption) (*ResponseAnnounce, error)
 }
 
 type controlMsgServiceClient struct {
@@ -42,11 +43,21 @@ func (c *controlMsgServiceClient) HandleHelloMsg(ctx context.Context, in *Reques
 	return out, nil
 }
 
+func (c *controlMsgServiceClient) HandleSetStationMsg(ctx context.Context, in *RequestSetStation, opts ...grpc.CallOption) (*ResponseAnnounce, error) {
+	out := new(ResponseAnnounce)
+	err := c.cc.Invoke(ctx, "/rpcMsg.ControlMsgService/HandleSetStationMsg", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ControlMsgServiceServer is the server API for ControlMsgService service.
 // All implementations must embed UnimplementedControlMsgServiceServer
 // for forward compatibility
 type ControlMsgServiceServer interface {
 	HandleHelloMsg(context.Context, *RequestHello) (*ResponseWelcome, error)
+	HandleSetStationMsg(context.Context, *RequestSetStation) (*ResponseAnnounce, error)
 	mustEmbedUnimplementedControlMsgServiceServer()
 }
 
@@ -56,6 +67,9 @@ type UnimplementedControlMsgServiceServer struct {
 
 func (UnimplementedControlMsgServiceServer) HandleHelloMsg(context.Context, *RequestHello) (*ResponseWelcome, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HandleHelloMsg not implemented")
+}
+func (UnimplementedControlMsgServiceServer) HandleSetStationMsg(context.Context, *RequestSetStation) (*ResponseAnnounce, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HandleSetStationMsg not implemented")
 }
 func (UnimplementedControlMsgServiceServer) mustEmbedUnimplementedControlMsgServiceServer() {}
 
@@ -88,6 +102,24 @@ func _ControlMsgService_HandleHelloMsg_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ControlMsgService_HandleSetStationMsg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestSetStation)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ControlMsgServiceServer).HandleSetStationMsg(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpcMsg.ControlMsgService/HandleSetStationMsg",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ControlMsgServiceServer).HandleSetStationMsg(ctx, req.(*RequestSetStation))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ControlMsgService_ServiceDesc is the grpc.ServiceDesc for ControlMsgService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -98,6 +130,10 @@ var ControlMsgService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "HandleHelloMsg",
 			Handler:    _ControlMsgService_HandleHelloMsg_Handler,
+		},
+		{
+			MethodName: "HandleSetStationMsg",
+			Handler:    _ControlMsgService_HandleSetStationMsg_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

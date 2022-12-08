@@ -67,8 +67,6 @@ func (server *Server) Make(args []string) {
 	// go server.InitialDaemonStations()
 
 	// log.Println("Server is running successfully!")
-	// Handle hello msg
-	// go server.RevClientConn()
 	go server.HandleServerCLI()
 
 	// Open an listener for RPC Msg

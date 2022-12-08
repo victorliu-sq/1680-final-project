@@ -5,12 +5,18 @@ package rpcMsg;
 option go_package = "pkg/protocol/rpcMsg";
 
 enum RPCType {
+    // Request
     REQUEST_HELLO = 0;
-    RESPONSE_WELCOME = 1;
+    REQUEST_SETSTATION = 1;
+    // Response
+    RESPONSE_WELCOME = 2;
+    RESPONSE_ANNOUNCE = 3;
+    RESPOSNE_INVALID = 4;
 }
 
 service ControlMsgService {
     rpc HandleHelloMsg (RequestHello) returns (ResponseWelcome) {};
+    rpc HandleSetStationMsg (RequestSetStation) returns (ResponseAnnounce) {}; 
 }
 
 message RequestHello {
@@ -22,4 +28,15 @@ message RequestHello {
 message ResponseWelcome {
     uint32 msgType = 1;
     uint32 songNum = 2;
+}
+
+message RequestSetStation {
+    uint32 msgType = 1;
+    uint32 stationNum = 2;
+    string controlName = 3;
+}
+
+message ResponseAnnounce {
+    uint32 msgType = 1;
+    string songName = 2;
 }
