@@ -84,6 +84,8 @@ func (crpcServer *CRPCServer) HandleHelloMsg(ctx context.Context, request *rpcMs
 }
 
 func (crpcServer *CRPCServer) HandleSetStationMsg(ctx context.Context, request *rpcMsg.RequestSetStation) (*rpcMsg.ResponseAnnounce, error) {
+	crpcServer.snowcastServer.Mu.Lock()
+	defer crpcServer.snowcastServer.Mu.Unlock()
 	server := crpcServer.snowcastServer
 	stationIdx := uint16(request.StationNum)
 	controlAddr := request.ControlName

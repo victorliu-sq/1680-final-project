@@ -17,8 +17,14 @@ generate:
 runC1:
 	./snowcast_control localhost 8888 5000 control1 23333
 
-runL:
+runL1:
 	./snowcast_listener 5000 | pv > /dev/null
+
+runC2:
+	./snowcast_control localhost 8888 6000 control2 24444
+
+runL2:
+	./snowcast_listener 6000 | pv > /dev/null
 
 runS:
 	./snowcast_server 8888 \
