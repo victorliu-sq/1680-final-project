@@ -15,6 +15,7 @@ type ClientControl struct {
 	UDPPort       string
 	ServerIP      string
 	ServerPort    string
+	ControlName   string
 	ClientMsgChan chan protocol.ClientMsg
 	// ServerConn    *net.TCPConn
 	ClientRPCClient rpcMsg.ControlMsgServiceClient
@@ -29,6 +30,7 @@ type ClientControl struct {
 func (cc *ClientControl) Make(args []string) {
 	cc.Mu = sync.Mutex{}
 	cc.ServerIP, cc.ServerPort, cc.UDPPort = args[1], args[2], args[3]
+	cc.ControlName = args[4]
 	cc.ClientMsgChan = make(chan protocol.ClientMsg, 1)
 	// Dial to server
 	// addr, err := net.ResolveTCPAddr("tcp4", ToIpColonPortNum(cc.ServerIP, cc.ServerPort))

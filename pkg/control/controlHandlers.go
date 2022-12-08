@@ -7,28 +7,7 @@ import (
 	"os"
 	"snowcast/pkg/protocol"
 	"snowcast/pkg/protocol/rpcMsg"
-	"strconv"
 )
-
-func (cc *ClientControl) CallHelloRPC() {
-	cc.Mu.Lock()
-	defer cc.Mu.Unlock()
-	udpPort, err := strconv.Atoi(cc.UDPPort)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	helloRequest := rpcMsg.RequestHello{
-		MsgType: uint32(rpcMsg.RPCType_REQUEST_HELLO),
-		UdpPort: uint32(udpPort),
-		Address: ToIpColonPortNum("localhost", cc.UDPPort),
-	}
-	response, err := cc.ClientRPCClient.HandleHelloMsg(context.Background(), &helloRequest)
-	if err != nil {
-		log.Fatalf("Fail to send Hello RPC: %v\n", err)
-	}
-	fmt.Printf("there are %v songs in total\n", response.SongNum)
-}
 
 func (cc *ClientControl) HandleClientMsg() {
 	for {
@@ -41,4 +20,21 @@ func (cc *ClientControl) HandleClientMsg() {
 			os.Exit(0)
 		}
 	}
+}
+
+func (cc *ClientControl) CallHelloRPC() {
+	cc.Mu.Lock()
+	defer cc.Mu.Unlock()
+	helloRequest := rpcMsg.RequestHello{
+		MsgType:     uint32(rpcMsg.RPCType_REQUEST_HELLO),
+		UdpPort:     cc.UDPPort,
+		ControlName: cc.ControlName,
+	}
+	response, err := cc.ClientRPCClient.HandleHelloMsg(context.Background(), &helloRequest)
+	if err != nil {
+		log.Fatalf("Fail to send Hello RPC: %v\n", err)
+	}
+	cc.IsWelcomeRev = true
+	fmt.Printf("Welcome to Snowcast! The server has %v stations\n", response.SongNum)
+	// fmt.Printf("there are %v songs in total\n", response.SongNum)
 }

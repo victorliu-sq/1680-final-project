@@ -15,8 +15,8 @@ service ControlMsgService {
 
 message RequestHello {
     uint32 msgType = 1;
-    uint32 udpPort = 2;
-    string address = 3;
+    string udpPort = 2;
+    string controlName = 3;
 }
 
 message ResponseWelcome {

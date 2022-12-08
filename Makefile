@@ -13,3 +13,13 @@ generate:
 	--go_out=. \
     --go-grpc_out=. \
     $(PROTO_DIR)rpcMsg.proto
+
+runC1:
+	./snowcast_control localhost 8888 5000 control1
+
+runL:
+	./snowcast_listener 5000 | pv > /dev/null
+
+runS:
+	./snowcast_server 8888 \
+	./mp3/Beethoven-SymphonyNo5.mp3 ./mp3/DukeEllington-Caravan.mp3 ./mp3/FX-Impact193.mp3
